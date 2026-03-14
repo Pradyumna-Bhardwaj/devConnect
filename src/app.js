@@ -1,8 +1,11 @@
 const express = require("express");
+const { adminAuth } = require("./middlewares/auth");
 
 const app = express();
 
-app.use("/hello",(req, res,next)=>{
+app.use("/admin", adminAuth)
+
+app.use("/admin/hello",(req, res,next)=>{
     console.log("hello middleware 1");
     next();
 },
