@@ -5,14 +5,34 @@ const User = require("./models/user");
 
 const app = express();
 
+app.use(express.json());
+
+// get user by email
+app.get("/feed", async (req, res)=>{
+    try{
+        const user = await User.findOne({email: req.body.email});
+        res.status(200).send(user);
+    }catch(err){
+        console.log("Error fetching user", err);
+        res.status(500).send("Some error occurred");
+    }
+})
+
+// get all users
+app.get("/feed", async (req, res)=>{
+    try{
+        const users = await User.find();
+        res.status(200).send(users);
+    }catch(err){
+        console.log("Error fetching users", err);
+        res.status(500).send("Some error occurred");
+    }
+
+})
+
+// signup
 app.post("/signup", async (req, res) => {
-  const user = new User({
-    firstName: "Pradyumna",
-    lastName: "Bhardwaj",
-    email: "pradyumna05@gmail.com",
-    age: 25,
-    gender: "Male",
-  });
+  const user = new User(req.body);
   try {
     await user.save();
     res.status(201).send(user);
