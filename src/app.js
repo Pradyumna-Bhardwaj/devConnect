@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 
 // get user by email
-app.get("/feed", async (req, res)=>{
+app.get("/user", async (req, res)=>{
     try{
         const user = await User.findOne({email: req.body.email});
         res.status(200).send(user);
@@ -41,6 +41,27 @@ app.post("/signup", async (req, res) => {
     res.status(500).send("Some error occurred");
   }
 });
+
+app.patch("/user", async (req, res)=>{
+  try{
+    await User.findByIdAndUpdate(req.body.id, req.body);
+    res.status(200).send("User updated successfully");
+  }catch(err){
+    console.log("Error updating user", err);
+    res.status(500).send("Some error occurred");
+  }
+})
+
+// delete user
+app.delete("/user", async (req, res)=>{
+  try{
+    await User.findByIdAndDelete(req.body.id);
+    res.status(200).send("User deleted successfully");
+  }catch(err){
+    console.log("Error deleting user", err);
+    res.status(500).send("Some error occurred");
+  }
+})
 
 connectDB()
   .then(() => {
