@@ -8,27 +8,26 @@ const app = express();
 app.use(express.json());
 
 // get user by email
-app.get("/user", async (req, res)=>{
-    try{
-        const user = await User.findOne({email: req.body.email});
-        res.status(200).send(user);
-    }catch(err){
-        console.log("Error fetching user", err);
-        res.status(500).send("Some error occurred");
-    }
-})
+app.get("/user", async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    res.status(200).send(user);
+  } catch (err) {
+    console.log("Error fetching user", err);
+    res.status(500).send("Some error occurred");
+  }
+});
 
 // get all users
-app.get("/feed", async (req, res)=>{
-    try{
-        const users = await User.find();
-        res.status(200).send(users);
-    }catch(err){
-        console.log("Error fetching users", err);
-        res.status(500).send("Some error occurred");
-    }
-
-})
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).send(users);
+  } catch (err) {
+    console.log("Error fetching users", err);
+    res.status(500).send("Some error occurred");
+  }
+});
 
 // signup
 app.post("/signup", async (req, res) => {
@@ -38,30 +37,51 @@ app.post("/signup", async (req, res) => {
     res.status(201).send(user);
   } catch (err) {
     console.log("Error saving user", err);
-    res.status(500).send("Some error occurred");
+    res.status(500).send("Some error occurred - " + err.message);
   }
 });
 
-app.patch("/user", async (req, res)=>{
-  try{
-    await User.findByIdAndUpdate(req.body.id, req.body);
+app.patch("/user/:userId", async (req, res) => {
+  userId = req.params.userId;
+  data = req.body;
+
+  try {
+    // API LVL VALIDATIONS
+    ALLOWED_UPDATES = [
+      "age",
+      "gender",
+      "phtotoUrl",
+      "about",
+      "skills",
+    ];
+    isUpdateAllowed = Object.keys(data).every((update) =>
+      ALLOWED_UPDATES.includes(update),
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("Invalid updates");
+    }
+
+    await User.findByIdAndUpdate(userId, req.body, {
+      returnDocument: "after",
+      runValidators: true,
+    });
     res.status(200).send("User updated successfully");
-  }catch(err){
+  } catch (err) {
     console.log("Error updating user", err);
-    res.status(500).send("Some error occurred");
+    res.status(500).send("Some error occurred - " + err.message);
   }
-})
+});
 
 // delete user
-app.delete("/user", async (req, res)=>{
-  try{
+app.delete("/user", async (req, res) => {
+  try {
     await User.findByIdAndDelete(req.body.id);
     res.status(200).send("User deleted successfully");
-  }catch(err){
+  } catch (err) {
     console.log("Error deleting user", err);
     res.status(500).send("Some error occurred");
   }
-})
+});
 
 connectDB()
   .then(() => {
