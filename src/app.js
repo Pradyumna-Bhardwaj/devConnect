@@ -1,6 +1,10 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
+
 const { adminAuth } = require("./middlewares/auth");
 const { connectDB } = require("./config/database");
+const { validateSignup } = require("./utils/validation");
+
 const User = require("./models/user");
 
 const app = express();
@@ -31,7 +35,16 @@ app.get("/feed", async (req, res) => {
 
 // signup
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
+  const {firstName, lastName, email, password} = req.body;
+
+  // Validate Data
+  const error = validateSignup({firstName, lastName, email, password});
+  if(error){
+    return res.status(400).send(error);
+  }
+
+  // Create User
+  const user = new User({firstName, lastName, email, password: await bcrypt.hash(password, 10)});
   try {
     await user.save();
     res.status(201).send(user);
@@ -40,6 +53,20 @@ app.post("/signup", async (req, res) => {
     res.status(500).send("Some error occurred - " + err.message);
   }
 });
+
+app.post("/login", async (req, res) => {
+  const {email, password} = req.body;
+  const user = await User.findOne({email});
+  if(!user){
+    return res.status(400).send("Invalid email");
+  }
+  const isMatch = await bcrypt.compare(password, user.password);
+  if(!isMatch){
+    return res.status(400).send("Invalid password");
+  }
+  res.status(200).send("Login successful");
+});
+
 
 app.patch("/user/:userId", async (req, res) => {
   userId = req.params.userId;
