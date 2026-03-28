@@ -4,10 +4,12 @@ const connectionRequestSchema = new mongoose.Schema(
   {
     fromUserId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     toUserId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     status: {
@@ -29,7 +31,7 @@ connectionRequestSchema.pre("save", function (next) {
   if (connectionRequest.fromUserId.equals(connectionRequest.toUserId)) {
     throw new Error("You cannot send a connection request to yourself");
   }
-  next();
+//   next(); -> this is no longer needed for .pre() middleware but for .post() middleware its still needed
 });
 
 const ConnectionRequest = mongoose.model(

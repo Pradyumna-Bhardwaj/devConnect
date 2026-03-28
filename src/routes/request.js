@@ -15,10 +15,17 @@ requestRouter.post(
       const toUserId = req.params.toUserId;
       const status = req.params.status;
 
+      //validating status
       if (!["interested", "ignored"].includes(status)) {
         throw new Error("Invalid status: " + status);
       }
 
+      //validating logged in user and to user id
+      if(fromUserId.equals(toUserId)){
+        throw new Error("You cannot send a connection request to yourself");
+      }
+
+      //checking if connection already exists
       isExitingConnection = await ConnectionRequest.findOne({$or: [
         { fromUserId, toUserId },
         { fromUserId: toUserId, toUserId: fromUserId }
@@ -43,5 +50,35 @@ requestRouter.post(
     }
   },
 );
+
+requestRouter.post("/request/review/:status/:requestId", userAuth, async (req, res) =>{
+    try{
+        const requestId = req.params.requestId;
+        const status = req.params.status;
+
+        //validating status
+        if(!["accepted", "rejected"].includes(status)){
+            throw new Error("Invalid status: " + status);
+        }
+
+        //validating logged in user and request Id
+        const connectionRequest = await ConnectionRequest.findOne({
+            _id: requestId,
+            toUserId: req.user._id,
+            status: "interested",
+        });
+
+        if(!connectionRequest){
+            throw new Error("Connection request not found");
+        }
+
+        connectionRequest.status = status;
+        data =await connectionRequest.save();
+        res.status(200).json({ message: "Connection request " + status, data });
+    }
+    catch(err){
+        res.status(400).send("Some error occurred: " + err.message);
+    }
+})
 
 module.exports = requestRouter;
