@@ -6,7 +6,7 @@ const userAuth = async (req, res, next) => {
   try {
     const { token } = req.cookies;
     if (!token) {
-      throw new Error("Invalid token, login again");
+      return res.status(401).send("Unauthorized");
     }
 
     const decoded = await jwt.verify(token, "devConnect@504");
@@ -19,7 +19,7 @@ const userAuth = async (req, res, next) => {
     if (!user) {
       throw new Error("User not found");
     }
-    
+
     req.user = user;
     next();
   } catch (err) {
